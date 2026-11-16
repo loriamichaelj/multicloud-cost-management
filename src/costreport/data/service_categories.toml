@@ -1,0 +1,52 @@
+# Maps provider service names to cross-cloud categories.
+#
+# Matching is a case-insensitive substring test against the service name.
+# Rules are tried top to bottom and the FIRST match wins, so put specific
+# categories (Containers, AI/ML) above broad ones (Compute). Anything that
+# matches no rule is reported as "Other" and listed in the report's Data
+# quality section so you know what to add here.
+#
+# To customise without editing the packaged file, copy it and point
+# `[report] category_map` in config.toml at your copy.
+
+[[rule]]
+category = "AI/ML"
+match = ["vertex", "sagemaker", "bedrock", "openai", "cognitive", "machine learning",
+         "rekognition", "comprehend", "textract", "translate", "polly", "transcribe"]
+
+[[rule]]
+category = "Containers"
+match = ["kubernetes", "container", "fargate"]
+
+[[rule]]
+category = "Database"
+match = ["relational database", "database", "dynamodb", "cosmos", "elasticache", "spanner",
+         "memorystore", "bigtable", "firestore", "documentdb", "neptune", "redis", "sql",
+         "postgres", "mysql"]
+
+[[rule]]
+category = "Analytics"
+match = ["bigquery", "redshift", "synapse", "databricks", "dataflow", "athena", "glue",
+         "emr", "kinesis", "opensearch", "elasticsearch", "data factory", "pub/sub", "dataproc"]
+
+[[rule]]
+category = "Storage"
+match = ["storage", "glacier", "elastic block", "ebs", "efs", "elastic file", "backup",
+         "filestore"]
+
+[[rule]]
+category = "Networking"
+match = ["data transfer", "cloudfront", "route 53", "load balanc", "virtual private cloud",
+         "vpc", "bandwidth", "virtual network", "networking", "cdn", "api gateway",
+         "direct connect", "vpn", "dns", "expressroute", "front door", "traffic manager"]
+
+[[rule]]
+category = "Monitoring & Security"
+match = ["cloudwatch", "monitor", "logging", "log analytics", "cloudtrail", "aws config",
+         "key management", "secrets manager", "security hub", "guardduty", "defender",
+         "sentinel", "support"]
+
+[[rule]]
+category = "Compute"
+match = ["compute", "virtual machines", "ec2", "lambda", "functions", "app service",
+         "cloud run", "lightsail", "batch", "vmware"]

@@ -1,0 +1,29 @@
+# Copy to config.toml (git-ignored).
+#   - `report`  reads [report], [budgets] and tag_key (offline, free)
+#   - `fetch --live` reads [aws], [azure], [gcp] (may incur cost)
+
+tag_key = "team"          # the one tag/label used for the by-tag view
+
+[report]
+min_change_usd = 100      # a mover must change by at least this many dollars...
+min_change_pct = 0.05     # ...and at least this fraction (5%) to be called out
+untagged_target = 0.10    # flag untagged spend above 10%
+# category_map = "my_categories.toml"   # copy of src/costreport/data/service_categories.toml
+
+# Monthly budget per cloud, USD. Omit the whole section to hide the Budget block.
+[budgets]
+aws = 125000
+azure = 80000
+gcp = 75000
+
+[aws]
+# profile = "my-profile"  # optional named profile; default credential chain otherwise
+
+[azure]
+# Cost Management scope, e.g. "subscriptions/<subscription-id>"
+scope = "subscriptions/00000000-0000-0000-0000-000000000000"
+
+[gcp]
+# Standard billing export table: project.dataset.gcp_billing_export_v1_<BILLING_ID>
+billing_table = "my-project.billing.gcp_billing_export_v1_XXXXXX_XXXXXX_XXXXXX"
+max_bytes_billed = 10_000_000_000   # hard cap; query is aborted above this

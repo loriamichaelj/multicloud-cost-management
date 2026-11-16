@@ -1,0 +1,43 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+build/
+dist/
+.pytest_cache/
+
+# Cost data: account IDs, resource names and spend figures are sensitive.
+# Pulled data, generated reports, and any export you download.
+/data/
+/reports/
+/exports/
+/downloads/
+*.csv
+*.csv.gz
+*.parquet
+
+# Local config (may contain subscription IDs, billing table names, profiles)
+config.toml
+config.*.toml
+!config.example.toml
+
+# Credentials and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+*credentials*.json
+*service-account*.json
+*-key.json
+.aws/
+.azure/
+.config/gcloud/
+application_default_credentials.json
+*.tfstate
+*.tfstate.*
+*.tfvars
