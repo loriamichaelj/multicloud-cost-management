@@ -1,0 +1,27 @@
+# SKELETON, not active (it lives in examples/, not .github/workflows/).
+# Copy to .github/workflows/weekly-cost-report.yml to use it.
+#
+# It runs the weekly command as a DRY RUN. Going live needs cloud credentials for
+# each provider (prefer OIDC federation over long-lived keys) and your decision
+# to accept the API cost. Those steps are deliberately not included here.
+name: weekly-cost-report
+on:
+  schedule:
+    - cron: "0 7 * * 1"
+  workflow_dispatch: {}
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Weekly run (dry run)
+        env:
+          PYTHONPATH: src
+        run: python -m costreport weekly --providers aws azure gcp --config config.example.toml
+      # To go live, add credential steps, then append --live to the command above.
+      # To deliver, add: --deliver slack email --send  and pass secrets via `env:` from
+      # repository secrets (COSTREPORT_SLACK_WEBHOOK_URL, COSTREPORT_SMTP_USER, COSTREPORT_SMTP_PASSWORD).

@@ -14,7 +14,7 @@ SDKs are optional extras.
 Requires Python 3.11+. No dependencies.
 
 ```sh
-make test                 # 79 unit tests, no network
+make test                 # 110 unit tests, no network
 make report               # generate sample data and print a report
 make example              # write a sample report to docs/example-report.md (not tracked)
 ```
@@ -66,6 +66,45 @@ what it saw and what it accepts.
 `untagged_target` sets the tagging warning, `[budgets]` adds a Budget section,
 and `category_map` points at your own copy of
 `src/costreport/data/service_categories.toml`.
+
+## Delivery: Slack and email (preview by default)
+
+Add `--deliver slack email` to `report` (or `weekly`) to send a summary. Nothing
+is sent unless you also pass `--send`; without it you get a preview of exactly
+what would go out.
+
+```sh
+export COSTREPORT_SLACK_WEBHOOK_URL='https://hooks.slack.com/services/...'   # secrets: env only
+python3 -m costreport report --input data/aws.csv --config config.toml --deliver slack email          # preview
+python3 -m costreport report --input data/aws.csv --config config.toml --deliver slack email --send   # send
+```
+
+- **Slack** gets the headlines and the top services (Slack cannot render tables).
+  The webhook must be a `https://hooks.slack.com/` URL.
+- **Email** gets the headlines in the body and the full Markdown report attached.
+  It always uses TLS (STARTTLS, or implicit TLS on port 465). Set
+  `COSTREPORT_SMTP_USER` and `COSTREPORT_SMTP_PASSWORD` if your server needs
+  login. Addresses and host go in `[delivery]` in the config.
+- Secrets are read from environment variables only and are never printed.
+- Config is checked before anything is sent, so a bad email setting cannot
+  leave Slack half-delivered.
+
+## Scheduled weekly run
+
+`weekly` is one command for cron or CI: fetch the last 35 days from each cloud,
+save `data/<cloud>.csv`, write `reports/<ISO-week>.md`, then optionally deliver.
+
+```sh
+python3 -m costreport weekly --providers aws azure gcp                  # DRY RUN: plan only
+python3 -m costreport weekly --providers aws azure gcp --live           # fetch + report + archive
+python3 -m costreport weekly --providers aws azure gcp --live --deliver slack email --send
+```
+
+Without `--live` it only prints the request plan and estimated cost. The end
+date defaults to 2 days ago because billing data lags. Delivery settings are
+validated before any paid fetch. `--send` requires `--live`. See
+`examples/crontab.example` and `examples/github-actions-weekly.example.yml`;
+both are dry runs as shipped.
 
 ## Using the cloud APIs (your decision, may incur cost)
 

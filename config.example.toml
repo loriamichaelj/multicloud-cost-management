@@ -27,3 +27,14 @@ scope = "subscriptions/00000000-0000-0000-0000-000000000000"
 # Standard billing export table: project.dataset.gcp_billing_export_v1_<BILLING_ID>
 billing_table = "my-project.billing.gcp_billing_export_v1_XXXXXX_XXXXXX_XXXXXX"
 max_bytes_billed = 10_000_000_000   # hard cap; query is aborted above this
+
+# Non-secret delivery settings for `--deliver slack|email`. Secrets are NEVER read
+# from this file; set them as environment variables:
+#   COSTREPORT_SLACK_WEBHOOK_URL   (must be https://hooks.slack.com/...)
+#   COSTREPORT_SMTP_USER / COSTREPORT_SMTP_PASSWORD   (optional, set both or neither)
+[delivery]
+email_from = "cost-reports@example.com"
+email_to = ["finance@example.com", "engineering-leads@example.com"]
+smtp_host = "smtp.example.com"
+smtp_port = 587          # 465 uses implicit TLS; anything else uses STARTTLS
+slack_top = 5            # services listed in the Slack summary

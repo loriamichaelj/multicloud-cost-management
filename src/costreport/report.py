@@ -68,7 +68,7 @@ def is_material(d: Driver, cfg: ReportSettings) -> bool:
     return d.pct is None or abs(d.pct) >= cfg.min_change_pct
 
 
-def _headlines(s: Summary, cfg: ReportSettings) -> list[str]:
+def headlines(s: Summary, cfg: ReportSettings) -> list[str]:
     out = []
     direction = "up" if s.delta > 0 else "down" if s.delta < 0 else "flat"
     if direction == "flat":
@@ -136,7 +136,7 @@ def render(
         L.append("")
         L.append(f"_{generated_note}_")
     L += ["", "## Headlines", ""]
-    L += [f"- {h}" for h in _headlines(s, cfg)]
+    L += [f"- {h}" for h in headlines(s, cfg)]
 
     L += ["", "## Spend by cloud", ""]
     L.append(_table(["Cloud", "This week", "Prior week", "Change", "%", "Share"], _driver_rows(s.providers, 99)))

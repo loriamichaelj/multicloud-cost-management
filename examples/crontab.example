@@ -1,0 +1,10 @@
+# Weekly cost report, Mondays 07:00. Copy into `crontab -e` after adjusting paths.
+#
+# This line is a DRY RUN: it prints the request plan and sends nothing.
+0 7 * * 1  cd /path/to/cost-management && PYTHONPATH=src python3 -m costreport weekly --providers aws azure gcp >> reports/cron.log 2>&1
+
+# To run for real (calls the cloud cost APIs, may incur cost), add --live.
+# To also post to Slack and email, add `--deliver slack email --send` and export
+# the secrets in the cron environment (not in the config file):
+#   COSTREPORT_SLACK_WEBHOOK_URL, COSTREPORT_SMTP_USER, COSTREPORT_SMTP_PASSWORD
+# Without --send, delivery is only previewed in the log.
