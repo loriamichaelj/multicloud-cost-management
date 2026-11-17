@@ -9,6 +9,104 @@ you pass `--live`.** Everything works offline on synthetic data. `fetch` is a
 dry run unless you add `--live`, `report` only reads local files, and the cloud
 SDKs are optional extras.
 
+## Architecture
+
+The design has one rule: **paid or networked work is separated from free
+analysis by a normalized CSV.** Everything left of the CSV can cost money and is
+off by default; everything right of it is pure, offline and deterministic.
+
+```mermaid
+flowchart LR
+    subgraph SRC["1. Data sources"]
+        direction TB
+        AWS["AWS<br/>Cost Explorer API"]
+        AZ["Azure<br/>Cost Management API"]
+        GCP["GCP<br/>BigQuery billing export"]
+        DL["Downloaded exports<br/>CUR, Azure, FOCUS, BigQuery CSV"]
+        SYN["Synthetic sample<br/>seeded, no network"]
+    end
+
+    subgraph ING["2. Ingest (opt-in, may cost money)"]
+        direction TB
+        PROV["providers/<br/>aws.py, azure.py, gcp.py<br/>plan() dry run, fetch() with --live"]
+        IMP["importers.py<br/>offline alias matching"]
+        SAM["providers/sample.py"]
+    end
+
+    CSV[("Normalized CSV<br/>storage.py<br/>CostRecord: date, provider, account,<br/>service, region, USD cost, tags")]
+
+    subgraph CORE["3. Analysis and report (free, offline, deterministic)"]
+        direction TB
+        AN["analysis.py<br/>top drivers, week over week,<br/>z-score anomalies, month to date, budgets"]
+        CAT["categories.py<br/>service_categories.toml"]
+        REP["report.py<br/>Markdown report + headlines"]
+    end
+
+    subgraph OUT["4. Output"]
+        direction TB
+        MD["reports/ISO-week.md"]
+        SLK["Slack webhook<br/>headlines + top services"]
+        EML["Email over TLS<br/>full report attached"]
+    end
+
+    CFG["config.toml<br/>thresholds, budgets, delivery<br/>secrets from env vars only"]
+    CLI["cli.py<br/>sample, fetch, import, report, weekly"]
+    SCHED["cron or GitHub Actions<br/>weekly, dry run as shipped"]
+
+    AWS --> PROV
+    AZ --> PROV
+    GCP --> PROV
+    DL --> IMP
+    SYN --> SAM
+    PROV --> CSV
+    IMP --> CSV
+    SAM --> CSV
+    CSV --> AN
+    CAT --> AN
+    AN --> REP
+    REP --> MD
+    REP -->|"--deliver ... --send"| SLK
+    REP -->|"--deliver ... --send"| EML
+
+    CFG -.-> AN
+    CFG -.-> PROV
+    CFG -.-> OUT
+    SCHED --> CLI
+    CLI -.->|orchestrates| ING
+    CLI -.->|orchestrates| CORE
+    CLI -.->|orchestrates| OUT
+```
+
+### Safety gates
+
+```mermaid
+flowchart LR
+    A["costreport weekly"] --> B{"--live?"}
+    B -->|no| C["Print request plan and<br/>estimated cost. Stop."]
+    B -->|yes| D["Preflight delivery config<br/>BEFORE any paid fetch"]
+    D --> E["Fetch 35 days per cloud<br/>GCP capped by max_bytes_billed"]
+    E --> F["data/cloud.csv"]
+    F --> G["Analyze and render<br/>reports/ISO-week.md"]
+    G --> H{"--deliver and --send?"}
+    H -->|"no"| I["Preview only"]
+    H -->|"yes"| J["Slack and/or email"]
+```
+
+### Modules
+
+| Module | Role |
+| --- | --- |
+| `models.py` | `CostRecord`, the single normalized row (USD only) that every stage shares |
+| `providers/` | One read-only client per cloud behind a `plan()` / `fetch()` protocol; `plan()` never touches the network |
+| `importers.py` | Turns console downloads into `CostRecord`s with no credentials or network |
+| `storage.py` | CSV read/write, the boundary between paid fetching and free analysis |
+| `analysis.py` | Pure functions over records: drivers, movers, anomalies, month to date, budgets |
+| `categories.py` | Maps each cloud's service names onto shared categories (Compute, Database, ...) |
+| `report.py` | Renders a `Summary` into the Markdown executive report |
+| `delivery.py` | Slack and email senders with preview-by-default and injectable clients |
+| `config.py` | Validated TOML settings; secrets are never read from files |
+| `cli.py` | Subcommands and the `weekly` orchestration |
+
 ## Quick start (free, offline)
 
 Requires Python 3.11+. No dependencies.
